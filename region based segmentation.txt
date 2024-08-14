@@ -1,0 +1,44 @@
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+class RegionGrow:
+  def __init__(self, image_path, seed_point, threshold): # Corrected constructor name
+    self.img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    self.seed = seed_point
+    self.threshold = threshold
+    self.segmented_img = np.zeros_like(self.img)
+
+  def grow(self):
+    rows, cols = self.img.shape
+    to_process = [self.seed]
+    self.segmented_img[self.seed] = 255
+    while to_process:
+      x, y = to_process.pop(0)
+      for dx in [-1, 0, 1]:
+        for dy in [-1, 0, 1]:
+          nx, ny = x + dx, y + dy
+          if 0 <= nx < rows and 0 <= ny <cols and self.segmented_img[nx, ny] == 0:
+            if abs(int(self.img[nx, ny]) - int(self.img[x, y]) ) <= self.threshold: # Fixed typo: self.img(x,y) to self.img[x,y]
+              self.segmented_img[nx, ny] = 255
+              to_process.append((nx, ny))
+
+  def save_results(self, original_img_path='lavadaloclg.jpg',segmented_img_path='segmented_image.png'):
+    plt.figure(figsize=(10,5))
+    plt.subplot(1, 2, 1) # Adjusted subplot layout for better visualization
+    plt.title('Original Image') # Corrected typo: Ɵtle to title
+    plt.imshow(self.img, cmap='gray')
+    plt.axis('off')
+    plt.subplot(1, 2, 2)  # Adjusted subplot layout 
+    plt.title('Segmented Image') # Corrected typo: Ɵtle to title
+    plt.imshow(self.segmented_img, cmap='gray')
+    plt.axis('off')
+    plt.savefig('combined_image.png')
+    plt.close()
+
+image_path = 'lavadaloclg.jpg'
+seed_point = (100, 100)
+threshold = 10
+rg = RegionGrow(image_path, seed_point, threshold)
+rg.grow()
+rg.save_results()
