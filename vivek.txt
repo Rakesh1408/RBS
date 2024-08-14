@@ -1,0 +1,50 @@
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Read and preprocess the image
+img = cv2.imread("road(2).jpg")
+img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+gray_img = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2GRAY)
+
+# Apply Gaussian blur to reduce noise
+blurred_img = cv2.GaussianBlur(gray_img, (5, 5), 0)
+
+# Perform edge detection
+canny_edges = cv2.Canny(blurred_img, 50, 150)
+
+# Define region of interest (ROI) vertices
+roi_vertices = [(270, 670), (600, 400), (1127, 712)]
+
+def roi(image, vertices):
+    mask = np.zeros_like(image)
+    mask_color = 255
+    cv2.fillPoly(mask, np.array([vertices], np.int32), mask_color)
+    masked_img = cv2.bitwise_and(image, mask)
+    return masked_img
+
+# Apply ROI mask to the edge-detected image
+roi_image = roi(canny_edges, roi_vertices)
+
+# Detect lines using Hough Transform
+lines = cv2.HoughLinesP(roi_image, 1, np.pi/180, 100, minLineLength=100, maxLineGap=50)
+
+def draw_lines(image, lines):
+    # Convert to RGB to draw colored lines
+    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    if lines is not None:
+        for line in lines:
+            x1, y1, x2, y2 = line[0]
+            cv2.line(image_rgb, (x1, y1), (x2, y2), (0, 255, 0), 2)
+    else:
+        print("No lines detected.")
+    return image_rgb
+
+# Draw detected lines on the original image
+result_img = draw_lines(img, lines)
+
+# Display the result
+plt.imshow(result_img)
+plt.xticks([])
+plt.yticks([])
+plt.show()
